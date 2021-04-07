@@ -1,0 +1,247 @@
+<html>
+ <head>
+<link rel="stylesheet" href="lib/codemirror.css">
+<script src="lib/codemirror.js"></script>
+<script src="lib/vim.js"></script>
+<script src="lib/javascript.js"></script>
+<script src="lib/css.js"></script>
+<script src="lib/htmlmixed.js"></script>
+<style>
+.container {
+ display: inline-grid;
+ grid-template-columns: 2fr 1fr;
+}
+iframe {
+ border: 0px;
+ margin: 0;
+ padding: 0;
+}
+</style>
+ </head>
+ <body>
+  <button id="myButton">Write</button>
+
+  <div class="container">
+   <div>
+  <iframe id="myIframe" width='100%' height='100%'></iframe>
+  </div>
+   <div>
+  <textarea id="textarea0">
+* { margin:0; padding:0; } /* to remove the top and left whitespace */
+
+html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+
+canvas { display:block; } /* To remove the scrollbars */
+
+
+/* to show the canvas bounds */
+canvas {
+    background: #ddd;
+}
+
+div {
+    position: absolute;
+    text-align: center;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+}* { margin:0; padding:0; } /* to remove the top and left whitespace */
+
+html, body { width:100%; height:100%; } /* just to be sure these are full screen*/
+
+canvas { display:block; } /* To remove the scrollbars */
+
+
+/* to show the canvas bounds */
+canvas {
+    background: #ddd;
+}
+
+div {
+    position: absolute;
+    text-align: center;
+    top: 20px;
+    left: 20px;
+    width: 200px;
+}
+</textarea>
+  </div>
+
+  <div>
+  <textarea id="textarea1">
+<div>Reference tracking demo</div>
+<canvas id="canvas"></canvas>
+</textarea>
+  </div>
+  <div>
+  <textarea id="textarea2">
+freqs = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37]
+amp = 10
+scale = 400
+
+var console = {
+    panel: $(parent.document.body).append('<div>'),
+    log: function(m){
+        this.panel.prepend('<div>'+m+'</div>');
+    }       
+};
+console.log('message');
+
+function reference(time) {
+	x = 0
+	freqs.forEach((f) => {
+  	x += Math.sin(time*f/scale)*amp
+  })
+	return x
+}
+
+function init_reference(time, n, dt) {
+	let t = new Array(n).fill(1).map((e,i)=>i)
+	y = t.map((t)=>reference(time + t - n/2))
+  return y
+}
+
+function reset_draw(ctx, w, h){
+  ctx.resetTransform();
+  ctx.lineWidth = 2;
+  ctx.clearRect(0, 0, w, h);
+  /* ctx.strokeRect(0, 0, w, h) */;
+  ctx.transform(1, 0, 0, 1, w / 2, h / 2);
+}
+
+function draw({canvas, buff, S, I}) {
+  ctx = canvas.getContext('2d');
+  w = canvas.width
+  h = canvas.height
+	reset_draw(ctx, w, h)
+
+	ctx.beginPath();
+	ctx.moveTo(buff.r[0],h/2)
+  i = 0
+  start_t = S.t % buff.r.length
+  for(let i=0; i < buff.r.length; i++) {
+  	x = buff.r[(i+start_t)%buff.r.length]
+    ctx.lineTo(x, h/2-i)
+  }
+
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(I.x, h/3, 2, 0, 2*Math.PI)
+  ctx.fill()
+
+  ctx.beginPath();
+  ctx.arc(S.x, 0, 5, 0, 2*Math.PI)
+  ctx.fill()
+}
+
+function setup({draw, buff, S, D, set_I}) {
+  const canvas = document.getElementById('canvas'),
+        ctx = canvas.getContext('2d');
+  window.addEventListener('resize', resizeCanvas, false);
+  window.addEventListener('mousemove', mouseMove, false);
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function mouseMove() {
+  	const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    set_I(x-canvas.width/2)
+  }
+  resizeCanvas();
+	return canvas
+}
+
+function step({P, S, I}) {
+	x = S.x + P.dt*I.x
+  x = Math.min(Math.max(x, P.min), P.max)
+	Sp = { t: S.t+1, x: x}
+	return Sp
+}
+
+(function () {
+  const freq = 40
+  let t = 0
+  let P = {dt:0.1,min:-200, max:200}
+  let I = {x:0}
+  let S = {t:0, x:0}
+  let buff = {r:[]}
+  const done = parent.count
+	const set_I = (x) => (I = {x: x})
+	canvas = setup({draw, buff, S, set_I})
+  buff.r = init_reference(S.t, canvas.height, 0.1)
+
+  function tick(){
+    console.log("count")
+    console.log(parent.count)
+    if (parent.count != done) {
+      return
+    }
+    draw({canvas, buff, S, I})
+    Sp = step({P, S, I})
+    S = Sp
+    buff.r[(S.t-1) % buff.r.length] = reference(S.t + canvas.height/2)
+    window.setTimeout(tick, 1000/freq)
+  }
+
+  tick()
+})();
+
+  </textarea>
+  </div>
+  </div>
+    <script>
+     let count = 0
+     textarea0 = document.getElementById('textarea0')
+  var editor = CodeMirror.fromTextArea(textarea0, {
+    lineNumbers: true,
+     keyMap: 'vim',
+     mode: "css"
+  });
+     textarea1 = document.getElementById('textarea1')
+  var editor = CodeMirror.fromTextArea(textarea1, {
+    lineNumbers: true,
+     keyMap: 'vim',
+     mode: 'html',
+  });
+     textarea2 = document.getElementById('textarea2')
+  var editor = CodeMirror.fromTextArea(textarea2, {
+    lineNumbers: true,
+     keyMap: 'vim',
+    mode: 'javascript'
+  });
+     
+  var iframe = document.getElementById('myIframe');
+  var iframeDocument = document.getElementById('myIframe').contentDocument;
+
+  iframeDocument.open();
+  iframeDocument.close();
+     document.getElementById('myButton').addEventListener('click', function() {
+  var iframeDocument = document.getElementById('myIframe').contentDocument;
+  //document.getElementById('myIframe').contentWindow.Stop();
+  console.log(window.frames[0])
+           // .Stop();
+
+  
+  style = document.getElementById('textarea0').value
+  body = document.getElementById('textarea1').value
+  script = document.getElementById('textarea2').value
+  iframeDocument.open();
+  iframeDocument.write(`
+        <html><head>
+          <style>`+style+`</style></h`+ `ead>
+        <body>`+body+`
+        <script type="text/javascript">`+script+`
+      </s`+`cript>
+         </b`+`ody></h`+`tml>`);
+  iframeDocument.close();
+  count += 1
+});
+
+    </script>
+ </body>
+
+</html>

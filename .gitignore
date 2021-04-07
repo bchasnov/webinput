@@ -3,3 +3,4 @@ env
 build
 create
 src/webinput.egg-info
+__pycache__
