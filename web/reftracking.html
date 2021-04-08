@@ -113,7 +113,7 @@ function draw({canvas, buff, S, I}) {
   ctx.fill()
 }
 
-function setup({canvas, draw, buff, S, D, set_I, get_inputmode}) {
+function setup({canvas, draw, buff, get_S, D, set_I, get_inputmode}) {
   ctx = canvas.getContext('2d');
   ws = null
   console.log(get_inputmode)
@@ -130,6 +130,7 @@ function setup({canvas, draw, buff, S, D, set_I, get_inputmode}) {
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    S = get_S()
     buff.r = init_reference(S.t, canvas.height, 0.1)
     buff.t = S.t
   }
@@ -233,11 +234,13 @@ function connect(url, set_I, get_inputmode) {
   let P = {dt:0.1,min:-200, max:200}
   let I = {x:0}
   let S = {t:0, x:0}
+  const get_S = ()=> (S)
   let buff = {r:[], t:0}
   let inputmode = 'mouse'
   const canvas = document.getElementById('canvas')
-	 let destroy = setup({canvas, draw, buff, S, set_I, get_inputmode})
+	 let destroy = setup({canvas, draw, buff, get_S, set_I, get_inputmode})
   buff.r = init_reference(S.t, canvas.height, 0.1)
+  buff.t = S.t
   inputmode_radio = document.getElementsByName('inputmode')
 
   
@@ -254,13 +257,14 @@ function connect(url, set_I, get_inputmode) {
     if (inputmode != new_inputmode) {
       inputmode = new_inputmode
       destroy()
-      destroy = setup({canvas, draw, buff, S, set_I, get_inputmode })
+      destroy = setup({canvas, draw, buff, get_S, set_I, get_inputmode })
     }
 
     draw({canvas, buff, S, I})
     Sp = step({P, S, I})
     S = Sp
     buff.r[(S.t-buff.t-1) % buff.r.length] = reference(S.t + canvas.height/2)
+    console.log(buff.t)
     window.setTimeout(tick, 1000/freq)
   }
 
